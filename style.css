@@ -179,7 +179,7 @@ code {
   margin: 2px 0 6px;
 }
 
-/* Контролли масштабу й камери */
+/* Контролли (ротейшн + камера) */
 .scene-controls {
   border-top: 1px solid #eceeff;
   padding-top: 6px;
