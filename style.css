@@ -17,14 +17,14 @@ body {
   z-index: 5;
 }
 
-/* Панель міні-сайту зверху */
+/* Панель "головної сторінки" зверху */
 #ui-panel {
   position: fixed;
   top: 10px;
   left: 10px;
-  max-width: 420px;
+  max-width: 440px;
   padding: 16px 18px;
-  background: rgba(10, 10, 10, 0.82);
+  background: rgba(10, 10, 10, 0.85);
   border-radius: 12px;
   box-shadow: 0 0 15px rgba(0, 0, 0, 0.8);
   color: #f5f5f5;
