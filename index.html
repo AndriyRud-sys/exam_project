@@ -7,9 +7,10 @@
   <!-- A-Frame для 3D сцени -->
   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
 
-  <!-- TensorFlow.js Hand Pose Detection + MediaPipe Hands (через CDN) -->
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/hand-pose-detection@2.0.1/dist/hand-pose-detection.min.js"></script>
+  <!-- MediaPipe Hands + TensorFlow.js core + Hand Pose Detection -->
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-core"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/hand-pose-detection"></script>
 
   <link rel="stylesheet" href="style.css" />
 </head>
@@ -25,17 +26,17 @@
     <a-plane rotation="-90 0 0" width="20" height="20" color="#222"></a-plane>
 
     <!-- Дерево Піфагора (зліва) -->
-    <a-entity id="pythagoras-root" position="-4 0 -6"></a-entity>
+    <a-entity id="pythagoras-root" position="-4 0 -6" visible="false"></a-entity>
 
     <!-- Ковер Серпінського (справа) -->
-    <a-entity id="sierpinski-root" position="4 0 -6"></a-entity>
+    <a-entity id="sierpinski-root" position="4 0 -6" visible="false"></a-entity>
 
     <!-- Візуалізація стеку викликів -->
     <a-entity id="call-stack" position="0 0 -4"></a-entity>
 
     <!-- HUD: показ глибини рекурсії над сценою -->
     <a-entity id="hud-text"
-              text="value: depth: 0; color: #FFF; width: 4"
+              text="value: depth: -; color: #FFF; width: 4"
               position="-1 2 -3">
     </a-entity>
   </a-scene>
@@ -43,28 +44,36 @@
   <!-- Відео з вебкамери (для ML) -->
   <video id="webcam" autoplay playsinline></video>
 
-  <!-- HTML-меню (міні-сайт поверх сцени) -->
+  <!-- HTML-меню (головна сторінка поверх сцени) -->
   <div id="ui-panel">
     <h1>Recursive World</h1>
 
-    <p class="subtitle">Вибери, яку фігуру показати:</p>
+    <p class="subtitle">Оберіть, яку фігуру показати:</p>
     <div class="button-row">
-      <button class="mode-btn active" data-mode="both">Дерево + Ковер</button>
+      <button class="mode-btn" data-mode="both">Дерево + Ковер</button>
       <button class="mode-btn" data-mode="tree">Тільки дерево Піфагора</button>
       <button class="mode-btn" data-mode="carpet">Тільки ковер Серпінського</button>
     </div>
 
     <h2>Керування жестами</h2>
     <ul class="gestures-list">
-      <li><b>Покажи велику та вказівний пальці</b> у кадрі (як «щипок»).</li>
-      <li><b>Пальці майже разом</b> → мінімальна глибина рекурсії (простий фрактал).</li>
-      <li><b>Чим далі пальці один від одного</b> → тим більша глибина (детальніший фрактал).</li>
-      <li>Глибина змінюється приблизно в діапазоні <b>1–8 рівнів</b>.</li>
+      <li><b>Покажи великий та вказівний пальці</b> у кадрі (як "щипок").</li>
+      <li><b>Пальці близько один до одного</b> → мала глибина (простий фрактал).</li>
+      <li><b>Чим далі пальці один від одного</b> → тим більша глибина (більш детальний фрактал).</li>
+      <li>Глибина змінюється приблизно в діапазоні <b>2–9 рівнів</b>.</li>
+    </ul>
+
+    <h2>Що тут відбувається?</h2>
+    <ul class="gestures-list">
+      <li><b>Дерево Піфагора</b> — рекурсивний фрактал: кожна гілка породжує ще дві.</li>
+      <li><b>Ковер Серпінського</b> — квадрат ділиться на 3×3, центр вирізається, для інших повторюємо рекурсію.</li>
+      <li><b>Factorial(n)</b> внизу по центру показує стек рекурсивних викликів.</li>
     </ul>
 
     <p class="hint">
-      Якщо камера не працює — перевір, що ти дозволив доступ до вебкамери у браузері
-      та відкриваєш сторінку через <code>http://</code> або GitHub Pages, а не <code>file://</code>.
+      Якщо камера не працює — дозволь доступ у браузері та відкривай сторінку через
+      <code>http://</code> або <code>https://</code> (локальний сервер чи GitHub Pages),
+      а не <code>file://</code>.
     </p>
   </div>
 
