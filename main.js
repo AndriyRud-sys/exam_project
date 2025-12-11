@@ -350,7 +350,6 @@ async function detectHandsLoop() {
           rotSlider.value = currentRotationY.toFixed(0);
           rotValue.textContent = currentRotationY.toFixed(0) + '°';
         }
-        }
       }
     }
 
