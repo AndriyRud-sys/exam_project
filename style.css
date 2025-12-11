@@ -5,7 +5,7 @@ body {
   font-family: Arial, sans-serif;
 }
 
-/* Маленьке вікно вебкамери в правому нижньому куті */
+/* Відео з вебкамери в правому нижньому куті */
 #webcam {
   position: fixed;
   right: 10px;
@@ -14,4 +14,90 @@ body {
   border: 2px solid #00ffcc;
   border-radius: 8px;
   box-shadow: 0 0 10px #00ffcc;
+  z-index: 5;
+}
+
+/* Панель міні-сайту зверху */
+#ui-panel {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  max-width: 420px;
+  padding: 16px 18px;
+  background: rgba(10, 10, 10, 0.82);
+  border-radius: 12px;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.8);
+  color: #f5f5f5;
+  z-index: 10;
+  backdrop-filter: blur(6px);
+}
+
+#ui-panel h1 {
+  margin: 0 0 8px;
+  font-size: 22px;
+  letter-spacing: 0.5px;
+}
+
+#ui-panel h2 {
+  margin: 14px 0 6px;
+  font-size: 16px;
+}
+
+.subtitle {
+  margin: 4px 0 8px;
+  font-size: 14px;
+  color: #ccc;
+}
+
+.button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.mode-btn {
+  flex: 1 1 auto;
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 1px solid #00ffcc;
+  background: rgba(0, 0, 0, 0.8);
+  color: #e0fffa;
+  cursor: pointer;
+  font-size: 13px;
+  transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+}
+
+.mode-btn:hover {
+  background: rgba(0, 255, 204, 0.15);
+  box-shadow: 0 0 6px rgba(0, 255, 204, 0.6);
+}
+
+.mode-btn.active {
+  background: rgba(0, 255, 204, 0.35);
+  box-shadow: 0 0 10px rgba(0, 255, 204, 0.9);
+  font-weight: bold;
+}
+
+.gestures-list {
+  margin: 4px 0 6px 18px;
+  padding: 0;
+  font-size: 13px;
+}
+
+.gestures-list li {
+  margin-bottom: 3px;
+}
+
+.hint {
+  margin-top: 4px;
+  font-size: 11px;
+  color: #aaaaaa;
+}
+
+code {
+  background: rgba(255, 255, 255, 0.08);
+  padding: 1px 4px;
+  border-radius: 4px;
+  font-size: 11px;
 }
