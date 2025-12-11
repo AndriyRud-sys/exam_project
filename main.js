@@ -330,7 +330,7 @@ async function detectHandsLoop() {
         const normX = (cx - videoWidth / 2) / (videoWidth / 2); // -1..1
 
         // normX < 0 — рука ліворуч: крутимо в один бік, normX > 0 — вправо
-        const rotationSpeed = normX * 2.5; // чутливість, можна підкрутити (2..4)
+        const rotationSpeed = normX * 2.0; // чутливість, можна підкрутити (2..4)
 
         // накопичуємо кут — не привʼязуємося до центру
         currentRotationY += rotationSpeed;
