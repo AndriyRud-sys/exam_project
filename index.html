@@ -15,15 +15,15 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <!-- 3D сцена -->
-  <a-scene>
+  <!-- 3D сцена (фон білий) -->
+  <a-scene background="color: #ffffff">
     <!-- Камера -->
     <a-entity position="0 1.6 0">
       <a-camera wasd-controls="enabled: true"></a-camera>
     </a-entity>
 
-    <!-- Підлога -->
-    <a-plane rotation="-90 0 0" width="20" height="20" color="#222"></a-plane>
+    <!-- Підлога (легкий сірий) -->
+    <a-plane rotation="-90 0 0" width="20" height="20" color="#f5f5f5"></a-plane>
 
     <!-- Дерево Піфагора (зліва) -->
     <a-entity id="pythagoras-root" position="-4 0 -6" visible="false"></a-entity>
@@ -36,7 +36,7 @@
 
     <!-- HUD: показ глибини рекурсії над сценою -->
     <a-entity id="hud-text"
-              text="value: depth: -; color: #FFF; width: 4"
+              text="value: depth: -; color: #333; width: 4"
               position="-1 2 -3">
     </a-entity>
   </a-scene>
@@ -44,37 +44,53 @@
   <!-- Відео з вебкамери (для ML) -->
   <video id="webcam" autoplay playsinline></video>
 
-  <!-- HTML-меню (головна сторінка поверх сцени) -->
-  <div id="ui-panel">
-    <h1>Recursive World</h1>
+  <!-- ГОЛОВНИЙ ЕКРАН (лендінг) -->
+  <div id="home-screen">
+    <div class="home-card">
+      <h1>Recursive World</h1>
+      <p class="home-subtitle">
+        Інтерактивна візуалізація рекурсії: фрактали + стек викликів + керування жестами.
+      </p>
 
-    <p class="subtitle">Оберіть, яку фігуру показати:</p>
-    <div class="button-row">
-      <button class="mode-btn" data-mode="both">Дерево + Ковер</button>
-      <button class="mode-btn" data-mode="tree">Тільки дерево Піфагора</button>
-      <button class="mode-btn" data-mode="carpet">Тільки ковер Серпінського</button>
+      <div class="home-section">
+        <h2>1. Оберіть режим перегляду</h2>
+        <div class="button-row">
+          <button class="mode-btn" data-mode="both">Дерево + Ковер</button>
+          <button class="mode-btn" data-mode="tree">Тільки дерево Піфагора</button>
+          <button class="mode-btn" data-mode="carpet">Тільки ковер Серпінського</button>
+        </div>
+      </div>
+
+      <div class="home-section">
+        <h2>2. Як працюють жести</h2>
+        <ul class="gestures-list">
+          <li><b>Великий + вказівний пальці</b> у кадрі (як "щипок").</li>
+          <li><b>Пальці близько</b> → низька глибина рекурсії (простий фрактал).</li>
+          <li><b>Пальці далеко</b> → висока глибина (більш деталізований фрактал).</li>
+          <li>Глибина в діапазоні <b>2–9</b>, показується над сценою.</li>
+        </ul>
+      </div>
+
+      <p class="hint">
+        Після вибору режиму відкриється сцена.  
+        Якщо камера не працює — дозволь доступ у браузері та відкривай сторінку через
+        <code>http://</code> або <code>https://</code>, а не <code>file://</code>.
+      </p>
     </div>
+  </div>
 
-    <h2>Керування жестами</h2>
-    <ul class="gestures-list">
-      <li><b>Покажи великий та вказівний пальці</b> у кадрі (як "щипок").</li>
-      <li><b>Пальці близько один до одного</b> → мала глибина (простий фрактал).</li>
-      <li><b>Чим далі пальці один від одного</b> → тим більша глибина (більш детальний фрактал).</li>
-      <li>Глибина змінюється приблизно в діапазоні <b>2–9 рівнів</b>.</li>
-    </ul>
-
-    <h2>Що тут відбувається?</h2>
-    <ul class="gestures-list">
-      <li><b>Дерево Піфагора</b> — рекурсивний фрактал: кожна гілка породжує ще дві.</li>
-      <li><b>Ковер Серпінського</b> — квадрат ділиться на 3×3, центр вирізається, для інших повторюємо рекурсію.</li>
-      <li><b>Factorial(n)</b> внизу по центру показує стек рекурсивних викликів.</li>
-    </ul>
-
-    <p class="hint">
-      Якщо камера не працює — дозволь доступ у браузері та відкривай сторінку через
-      <code>http://</code> або <code>https://</code> (локальний сервер чи GitHub Pages),
-      а не <code>file://</code>.
-    </p>
+  <!-- UI ДЛЯ СЦЕНИ (після вибору режиму) -->
+  <div id="scene-ui" class="hidden">
+    <div class="scene-panel">
+      <div class="scene-row">
+        <span class="scene-title">Режим: <span id="scene-mode-label">—</span></span>
+        <button id="back-to-menu">Назад до меню</button>
+      </div>
+      <div class="scene-desc">
+        <p><b>Жести:</b> рух великий–вказівний палець змінює глибину рекурсії (2–9).</p>
+        <p>На сцені: дерево Піфагора, ковер Серпінського та стек викликів <code>factorial(n)</code>.</p>
+      </div>
+    </div>
   </div>
 
   <!-- Основний JS -->
