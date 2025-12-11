@@ -1,4 +1,3 @@
-// --------- ГЛОБАЛЬНИЙ СТАН ---------
 let currentDepth = 6;          // поточна глибина рекурсії (2..9)
 let currentMode = 'none';      // none | both | tree | carpet
 let detector = null;           // ML детектор рук
@@ -7,8 +6,11 @@ let stackVisualizer = null;    // візуалізація стеку
 
 let treeRoot = null;
 let carpetRoot = null;
+let fractalRoot = null;
 let cameraRig = null;
+
 let currentScale = 1.0;
+let currentRotationY = 0;      // кут обертання сцени навколо центру
 
 // --------------------------------------------------
 // 1. ВІЗУАЛІЗАЦІЯ СТЕКУ ВИКЛИКІВ
@@ -76,7 +78,7 @@ function factorial(n, stackVis) {
 }
 
 // --------------------------------------------------
-// 3. ДЕРЕВО ПІФАГОРА (чіткий фрактал)
+// 3. ДЕРЕВО ПІФАГОРА (чіткий 3D фрактал)
 // --------------------------------------------------
 function createPythagorasTree(rootEl, maxDepth) {
   if (!rootEl) return;
@@ -91,7 +93,7 @@ function createPythagorasTree(rootEl, maxDepth) {
     const square = document.createElement('a-box');
     square.setAttribute('width', size);
     square.setAttribute('height', size);
-    square.setAttribute('depth', 0.12);
+    square.setAttribute('depth', 0.18); // помітна товщина
     const hue = 205 + level * 8;
     square.setAttribute('color', `hsl(${hue}, 75%, 55%)`);
     square.setAttribute('position', { x, y, z: 0 });
@@ -116,11 +118,11 @@ function createPythagorasTree(rootEl, maxDepth) {
     addSquare(parent, rx, ry, newSize, rightAngle, level + 1);
   }
 
-  addSquare(rootEl, 0, 0.6, 1.3, 0, 0);
+  addSquare(rootEl, 0, 0.6, 1.4, 0, 0);
 }
 
 // --------------------------------------------------
-// 4. КОВЕР СЕРПІНСЬКОГО (чіткий)
+// 4. КОВЕР СЕРПІНСЬКОГО (3D плитки)
 // --------------------------------------------------
 function createSierpinskiCarpet(rootEl, maxDepth) {
   if (!rootEl) return;
@@ -135,11 +137,11 @@ function createSierpinskiCarpet(rootEl, maxDepth) {
     if (level === maxLevel) {
       const box = document.createElement('a-box');
       box.setAttribute('width', size);
-      box.setAttribute('height', 0.12);
+      box.setAttribute('height', 0.18);
       box.setAttribute('depth', size);
       const hue = 40 + level * 10;
       box.setAttribute('color', `hsl(${hue}, 80%, 55%)`);
-      box.setAttribute('position', { x: cx, y: 0.06, z: cz });
+      box.setAttribute('position', { x: cx, y: 0.09, z: cz + level * 0.02 }); // трохи зсув по Z для обʼєму
       parent.appendChild(box);
       return;
     }
@@ -165,9 +167,9 @@ function createSierpinskiCarpet(rootEl, maxDepth) {
 // --------------------------------------------------
 function applyScale(scale) {
   currentScale = scale;
+  if (!fractalRoot) return;
   const s = { x: scale, y: scale, z: scale };
-  if (treeRoot) treeRoot.setAttribute('scale', s);
-  if (carpetRoot) carpetRoot.setAttribute('scale', s);
+  fractalRoot.setAttribute('scale', s);
 }
 
 // --------------------------------------------------
@@ -188,7 +190,6 @@ function redrawFractals() {
     while (carpetRoot.firstChild) carpetRoot.removeChild(carpetRoot.firstChild);
   }
 
-  // повторно застосувати масштаб після перемальовування
   applyScale(currentScale);
 }
 
@@ -210,7 +211,7 @@ function updateDepth(newDepth) {
 }
 
 // --------------------------------------------------
-// 8. РЕЖИМИ (які фігури показувати)
+// 8. РЕЖИМИ (які фігури показувати + розміщення в центрі)
 // --------------------------------------------------
 function applyMode(mode) {
   currentMode = mode;
@@ -227,8 +228,18 @@ function applyMode(mode) {
   const showTree = (mode === 'both' || mode === 'tree');
   const showCarpet = (mode === 'both' || mode === 'carpet');
 
-  if (treeRoot) treeRoot.setAttribute('visible', showTree);
-  if (carpetRoot) carpetRoot.setAttribute('visible', showCarpet);
+  if (treeRoot) {
+    treeRoot.setAttribute('visible', showTree);
+    // центр = (0,0,0) всередині fractal-root
+    if (mode === 'tree') treeRoot.setAttribute('position', { x: 0, y: 0, z: 0 });
+    if (mode === 'both') treeRoot.setAttribute('position', { x: -2.2, y: 0, z: 0 });
+  }
+
+  if (carpetRoot) {
+    carpetRoot.setAttribute('visible', showCarpet);
+    if (mode === 'carpet') carpetRoot.setAttribute('position', { x: 0, y: 0, z: 0 });
+    if (mode === 'both') carpetRoot.setAttribute('position', { x: 2.2, y: 0, z: 0 });
+  }
 
   redrawFractals();
 }
@@ -273,7 +284,7 @@ async function initHandDetector() {
 }
 
 // --------------------------------------------------
-// 10. ЦИКЛ ДЕТЕКЦІЇ РУКИ (жест "щипок" для глибини)
+// 10. ЦИКЛ ДЕТЕКЦІЇ РУКИ (глибина + обертання)
 // --------------------------------------------------
 async function detectHandsLoop() {
   if (!detector || !video || video.readyState < 2) {
@@ -292,22 +303,33 @@ async function detectHandsLoop() {
       const indexTip = keypoints.find(k => k.name === 'index_finger_tip');
 
       if (thumbTip && indexTip) {
+        // ---- ГЛИБИНА (щипок) ----
         const dx = thumbTip.x - indexTip.x;
         const dy = thumbTip.y - indexTip.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
 
-        // Діапазон відстані
         const minD = 20;
         const maxD = 260;
         let t = (dist - minD) / (maxD - minD);
         t = Math.max(0, Math.min(1, t)); // 0..1
 
-        // Якщо показуємо тільки ковер – глибина 2..5, щоб усі значення були помітні
         const depthMin = 2;
         const depthMax = (currentMode === 'carpet') ? 5 : 9;
         const depth = depthMin + t * (depthMax - depthMin);
-
         updateDepth(depth);
+
+        // ---- ОБЕРТАННЯ (горизонтальне положення руки) ----
+        const cx = (thumbTip.x + indexTip.x) / 2;
+        const videoWidth = video.videoWidth || 640;
+        const normX = (cx - videoWidth / 2) / (videoWidth / 2); // -1..1
+        const maxAngle = 70; // градусів
+        const targetAngle = normX * maxAngle;
+
+        // просте згладжування
+        currentRotationY = currentRotationY * 0.8 + targetAngle * 0.2;
+        if (fractalRoot) {
+          fractalRoot.setAttribute('rotation', { x: 0, y: currentRotationY, z: 0 });
+        }
       }
     }
 
@@ -330,9 +352,10 @@ function updateCameraPosition(x, y, z) {
 // 12. СТАРТ ПРИ ЗАВАНТАЖЕННІ СТОРІНКИ
 // --------------------------------------------------
 window.addEventListener('load', () => {
-  treeRoot   = document.querySelector('#pythagoras-root');
-  carpetRoot = document.querySelector('#sierpinski-root');
-  cameraRig  = document.querySelector('#cameraRig');
+  treeRoot    = document.querySelector('#pythagoras-root');
+  carpetRoot  = document.querySelector('#sierpinski-root');
+  fractalRoot = document.querySelector('#fractal-root');
+  cameraRig   = document.querySelector('#cameraRig');
   const stackRoot = document.querySelector('#call-stack');
 
   stackVisualizer = new CallStackVisualizer(stackRoot);
@@ -342,7 +365,6 @@ window.addEventListener('load', () => {
   const backBtn      = document.getElementById('back-to-menu');
   const hudText      = document.querySelector('#hud-text');
 
-  // Слайдери й текстові значення
   const scaleSlider  = document.getElementById('scale-slider');
   const scaleValue   = document.getElementById('scale-value');
   const camXSlider   = document.getElementById('camx-slider');
@@ -356,7 +378,7 @@ window.addEventListener('load', () => {
     hudText.setAttribute('text', 'value: depth: -; color: #333; width: 4');
   }
 
-  // Обробка кнопок на головному екрані
+  // Кнопки на головному екрані
   const buttons = document.querySelectorAll('#home-screen .mode-btn');
   buttons.forEach(btn => {
     btn.addEventListener('click', () => {
@@ -387,7 +409,7 @@ window.addEventListener('load', () => {
       }
 
       if (hudText) {
-        hudText.setAttribute('text', 'value: depth: -; color: #333; width: 4');
+        hudText.setAttribute('text', 'value: depth: -; color: #333; width: 4`);
       }
 
       if (homeScreen) homeScreen.style.display = 'flex';
@@ -403,6 +425,24 @@ window.addEventListener('load', () => {
       applyScale(val);
     });
   }
+
+  // Масштаб колесиком миші
+  window.addEventListener('wheel', (e) => {
+    // тільки коли ми вже на сцені, а не на головному екрані
+    if (homeScreen && homeScreen.style.display !== 'none') return;
+
+    e.preventDefault();
+    const delta = e.deltaY; // >0 — від себе, <0 — до себе
+    let newScale = currentScale - delta * 0.0015;
+    newScale = Math.max(0.5, Math.min(2.0, newScale));
+    currentScale = newScale;
+
+    if (scaleSlider && scaleValue) {
+      scaleSlider.value = newScale.toFixed(1);
+      scaleValue.textContent = `${newScale.toFixed(1)}×`;
+    }
+    applyScale(newScale);
+  }, { passive: false });
 
   // Слайдери камери
   function updateCamFromSliders() {
