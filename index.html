@@ -17,22 +17,25 @@
 <body>
   <!-- 3D сцена (фон білий) -->
   <a-scene background="color: #ffffff">
-    <!-- Камера в “рігу”, яким будемо рухати -->
-    <a-entity id="cameraRig" position="0 1.6 0">
+    <!-- Камера в ригу (щоб було легше рухати всю камеру) -->
+    <a-entity id="cameraRig" position="0 1.8 0">
       <a-camera wasd-controls="enabled: true"></a-camera>
     </a-entity>
 
     <!-- Підлога (легкий сірий) -->
     <a-plane rotation="-90 0 0" width="20" height="20" color="#f5f5f5"></a-plane>
 
-    <!-- Дерево Піфагора (зліва) -->
-    <a-entity id="pythagoras-root" position="-4 0 -6" visible="false"></a-entity>
+    <!-- Корінь фракталів у центрі сцени -->
+    <a-entity id="fractal-root" position="0 0 -6">
+      <!-- Дерево Піфагора -->
+      <a-entity id="pythagoras-root" visible="false"></a-entity>
 
-    <!-- Ковер Серпінського (справа) -->
-    <a-entity id="sierpinski-root" position="4 0 -6" visible="false"></a-entity>
+      <!-- Ковер Серпінського -->
+      <a-entity id="sierpinski-root" visible="false"></a-entity>
+    </a-entity>
 
     <!-- Візуалізація стеку викликів -->
-    <a-entity id="call-stack" position="0 0 -4"></a-entity>
+    <a-entity id="call-stack" position="0 0 -3"></a-entity>
 
     <!-- HUD: показ глибини рекурсії над сценою -->
     <a-entity id="hud-text"
@@ -64,10 +67,9 @@
       <div class="home-section">
         <h2>2. Як працюють жести</h2>
         <ul class="gestures-list">
-          <li><b>Великий + вказівний пальці</b> у кадрі (як "щипок").</li>
-          <li><b>Пальці близько</b> → низька глибина рекурсії (простий фрактал).</li>
-          <li><b>Пальці далеко</b> → висока глибина (більш деталізований фрактал).</li>
-          <li>Глибина в діапазоні <b>2–9</b>, показується над сценою.</li>
+          <li><b>Щипок</b>: великий + вказівний пальці в кадрі.</li>
+          <li><b>Відстань між пальцями</b> → глибина рекурсії (2–9).</li>
+          <li><b>Горизонтальне положення руки</b> (вліво/вправо) → обертання сцени навколо фігури.</li>
         </ul>
       </div>
 
@@ -87,11 +89,11 @@
         <button id="back-to-menu">Назад до меню</button>
       </div>
       <div class="scene-desc">
-        <p><b>Жести:</b> рух великий–вказівний палець змінює глибину рекурсії (2–9).</p>
+        <p><b>Жести:</b> щипок змінює глибину, рух руки вліво/вправо обертає сцену.</p>
       </div>
       <div class="scene-controls">
         <div class="ctrl-group">
-          <label>Масштаб фігури: <span id="scale-value">1.0×</span></label>
+          <label>Масштаб фігури (колесико миші теж працює): <span id="scale-value">1.0×</span></label>
           <input type="range" id="scale-slider" min="0.5" max="2.0" step="0.1" value="1.0">
         </div>
         <div class="ctrl-group">
@@ -99,8 +101,8 @@
           <input type="range" id="camx-slider" min="-5" max="5" step="0.5" value="0">
         </div>
         <div class="ctrl-group">
-          <label>Камера Y: <span id="camy-value">1.6</span></label>
-          <input type="range" id="camy-slider" min="0.5" max="5" step="0.1" value="1.6">
+          <label>Камера Y: <span id="camy-value">1.8</span></label>
+          <input type="range" id="camy-slider" min="0.5" max="5" step="0.1" value="1.8">
         </div>
         <div class="ctrl-group">
           <label>Камера Z: <span id="camz-value">0</span></label>
