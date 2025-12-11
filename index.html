@@ -74,7 +74,7 @@
       </div>
 
       <p class="hint">
-        Після вибору режиму відкриється сцена.<br/>
+        Масштаб змінюється <b>колесиком миші</b> на сцені.<br/>
         Якщо камера не працює — дозволь доступ у браузері та відкривай сторінку через
         <code>http://</code> або <code>https://</code>, а не <code>file://</code>.
       </p>
@@ -89,12 +89,12 @@
         <button id="back-to-menu">Назад до меню</button>
       </div>
       <div class="scene-desc">
-        <p><b>Жести:</b> щипок змінює глибину, рух руки вліво/вправо обертає сцену.</p>
+        <p><b>Жести:</b> щипок змінює глибину, рух руки вліво/вправо обертає сцену. Масштаб — колесиком миші.</p>
       </div>
       <div class="scene-controls">
         <div class="ctrl-group">
-          <label>Масштаб фігури (колесико миші теж працює): <span id="scale-value">1.0×</span></label>
-          <input type="range" id="scale-slider" min="0.5" max="2.0" step="0.1" value="1.0">
+          <label>Обертання сцени: <span id="rot-value">0°</span></label>
+          <input type="range" id="rot-slider" min="-180" max="180" step="5" value="0">
         </div>
         <div class="ctrl-group">
           <label>Камера X: <span id="camx-value">0</span></label>
