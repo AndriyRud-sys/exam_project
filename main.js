@@ -324,16 +324,32 @@ async function detectHandsLoop() {
         const depth = depthMin + t * (depthMax - depthMin);
         updateDepth(depth);
 
-        // ---- ОБЕРТАННЯ (горизонтальне положення руки) ----
+        // ---- ОБЕРТАННЯ (горизонтальне положення руки як "швидкість") ----
         const cx = (thumbTip.x + indexTip.x) / 2;
         const videoWidth = video.videoWidth || 640;
         const normX = (cx - videoWidth / 2) / (videoWidth / 2); // -1..1
-        const maxAngle = 70;
-        const targetAngle = normX * maxAngle;
 
-        currentRotationY = currentRotationY * 0.8 + targetAngle * 0.2;
+        // normX < 0 — рука ліворуч: крутимо в один бік, normX > 0 — вправо
+        const rotationSpeed = normX * 2.5; // чутливість, можна підкрутити (2..4)
+
+        // накопичуємо кут — не привʼязуємося до центру
+        currentRotationY += rotationSpeed;
+
+        // нормалізуємо кут, щоб не ріс до безкінечності
+        if (currentRotationY > 180) currentRotationY -= 360;
+        if (currentRotationY < -180) currentRotationY += 360;
+
         if (fractalRoot) {
           fractalRoot.setAttribute('rotation', { x: 0, y: currentRotationY, z: 0 });
+        }
+
+        // оновимо значення слайдера, якщо є
+        const rotSlider = document.getElementById('rot-slider');
+        const rotValue  = document.getElementById('rot-value');
+        if (rotSlider && rotValue) {
+          rotSlider.value = currentRotationY.toFixed(0);
+          rotValue.textContent = currentRotationY.toFixed(0) + '°';
+        }
         }
       }
     }
@@ -370,8 +386,8 @@ window.addEventListener('load', () => {
   const backBtn      = document.getElementById('back-to-menu');
   const hudText      = document.querySelector('#hud-text');
 
-  const scaleSlider  = document.getElementById('scale-slider');
-  const scaleValue   = document.getElementById('scale-value');
+  const rotSlider    = document.getElementById('rot-slider');
+  const rotValue     = document.getElementById('rot-value');
   const camXSlider   = document.getElementById('camx-slider');
   const camYSlider   = document.getElementById('camy-slider');
   const camZSlider   = document.getElementById('camz-slider');
@@ -422,12 +438,15 @@ window.addEventListener('load', () => {
     });
   }
 
-  // Слайдер масштабу
-  if (scaleSlider && scaleValue) {
-    scaleSlider.addEventListener('input', () => {
-      const val = parseFloat(scaleSlider.value);
-      scaleValue.textContent = val.toFixed(1) + '×';
-      applyScale(val);
+  // Слайдер обертання
+  if (rotSlider && rotValue) {
+    rotSlider.addEventListener('input', () => {
+      const angle = parseFloat(rotSlider.value);
+      currentRotationY = angle;
+      rotValue.textContent = angle.toFixed(0) + '°';
+      if (fractalRoot) {
+        fractalRoot.setAttribute('rotation', { x: 0, y: currentRotationY, z: 0 });
+      }
     });
   }
 
@@ -441,10 +460,6 @@ window.addEventListener('load', () => {
     newScale = Math.max(0.5, Math.min(2.0, newScale));
     currentScale = newScale;
 
-    if (scaleSlider && scaleValue) {
-      scaleSlider.value = newScale.toFixed(1);
-      scaleValue.textContent = newScale.toFixed(1) + '×';
-    }
     applyScale(newScale);
   }, { passive: false });
 
