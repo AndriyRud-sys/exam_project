@@ -1,1 +1,17 @@
+body {
+  margin: 0;
+  overflow: hidden;
+  background: #000;
+  font-family: Arial, sans-serif;
+}
 
+/* Маленьке вікно вебкамери в правому нижньому куті */
+#webcam {
+  position: fixed;
+  right: 10px;
+  bottom: 10px;
+  width: 220px;
+  border: 2px solid #00ffcc;
+  border-radius: 8px;
+  box-shadow: 0 0 10px #00ffcc;
+}
