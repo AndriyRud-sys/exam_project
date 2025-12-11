@@ -1,3 +1,4 @@
+// --------- ГЛОБАЛЬНИЙ СТАН ---------
 let currentDepth = 6;          // поточна глибина рекурсії (2..9)
 let currentMode = 'none';      // none | both | tree | carpet
 let detector = null;           // ML детектор рук
@@ -78,7 +79,7 @@ function factorial(n, stackVis) {
 }
 
 // --------------------------------------------------
-// 3. ДЕРЕВО ПІФАГОРА (чіткий 3D фрактал)
+// 3. ДЕРЕВО ПІФАГОРА (3D фрактал)
 // --------------------------------------------------
 function createPythagorasTree(rootEl, maxDepth) {
   if (!rootEl) return;
@@ -93,7 +94,7 @@ function createPythagorasTree(rootEl, maxDepth) {
     const square = document.createElement('a-box');
     square.setAttribute('width', size);
     square.setAttribute('height', size);
-    square.setAttribute('depth', 0.18); // помітна товщина
+    square.setAttribute('depth', 0.18);
     const hue = 205 + level * 8;
     square.setAttribute('color', `hsl(${hue}, 75%, 55%)`);
     square.setAttribute('position', { x, y, z: 0 });
@@ -141,7 +142,7 @@ function createSierpinskiCarpet(rootEl, maxDepth) {
       box.setAttribute('depth', size);
       const hue = 40 + level * 10;
       box.setAttribute('color', `hsl(${hue}, 80%, 55%)`);
-      box.setAttribute('position', { x: cx, y: 0.09, z: cz + level * 0.02 }); // трохи зсув по Z для обʼєму
+      box.setAttribute('position', { x: cx, y: 0.09, z: cz + level * 0.02 });
       parent.appendChild(box);
       return;
     }
@@ -204,7 +205,7 @@ function updateDepth(newDepth) {
 
   const hudText = document.querySelector('#hud-text');
   if (hudText) {
-    hudText.setAttribute('text', `value: depth: ${currentDepth}; color: #333; width: 4`);
+    hudText.setAttribute('text', 'value: depth: ' + currentDepth + '; color: #333; width: 4');
   }
 
   redrawFractals();
@@ -230,7 +231,6 @@ function applyMode(mode) {
 
   if (treeRoot) {
     treeRoot.setAttribute('visible', showTree);
-    // центр = (0,0,0) всередині fractal-root
     if (mode === 'tree') treeRoot.setAttribute('position', { x: 0, y: 0, z: 0 });
     if (mode === 'both') treeRoot.setAttribute('position', { x: -2.2, y: 0, z: 0 });
   }
@@ -239,6 +239,12 @@ function applyMode(mode) {
     carpetRoot.setAttribute('visible', showCarpet);
     if (mode === 'carpet') carpetRoot.setAttribute('position', { x: 0, y: 0, z: 0 });
     if (mode === 'both') carpetRoot.setAttribute('position', { x: 2.2, y: 0, z: 0 });
+  }
+
+  // при зміні режиму скинемо поворот сцени
+  currentRotationY = 0;
+  if (fractalRoot) {
+    fractalRoot.setAttribute('rotation', { x: 0, y: 0, z: 0 });
   }
 
   redrawFractals();
@@ -322,10 +328,9 @@ async function detectHandsLoop() {
         const cx = (thumbTip.x + indexTip.x) / 2;
         const videoWidth = video.videoWidth || 640;
         const normX = (cx - videoWidth / 2) / (videoWidth / 2); // -1..1
-        const maxAngle = 70; // градусів
+        const maxAngle = 70;
         const targetAngle = normX * maxAngle;
 
-        // просте згладжування
         currentRotationY = currentRotationY * 0.8 + targetAngle * 0.2;
         if (fractalRoot) {
           fractalRoot.setAttribute('rotation', { x: 0, y: currentRotationY, z: 0 });
@@ -388,7 +393,7 @@ window.addEventListener('load', () => {
       if (sceneUi) sceneUi.classList.remove('hidden');
 
       if (hudText) {
-        hudText.setAttribute('text', `value: depth: ${currentDepth}; color: #333; width: 4`);
+        hudText.setAttribute('text', 'value: depth: ' + currentDepth + '; color: #333; width: 4');
       }
 
       applyMode(mode);
@@ -409,7 +414,7 @@ window.addEventListener('load', () => {
       }
 
       if (hudText) {
-        hudText.setAttribute('text', 'value: depth: -; color: #333; width: 4`);
+        hudText.setAttribute('text', 'value: depth: -; color: #333; width: 4');
       }
 
       if (homeScreen) homeScreen.style.display = 'flex';
@@ -421,25 +426,24 @@ window.addEventListener('load', () => {
   if (scaleSlider && scaleValue) {
     scaleSlider.addEventListener('input', () => {
       const val = parseFloat(scaleSlider.value);
-      scaleValue.textContent = `${val.toFixed(1)}×`;
+      scaleValue.textContent = val.toFixed(1) + '×';
       applyScale(val);
     });
   }
 
-  // Масштаб колесиком миші
+  // Масштаб колесиком миші (коли вже не на головному екрані)
   window.addEventListener('wheel', (e) => {
-    // тільки коли ми вже на сцені, а не на головному екрані
     if (homeScreen && homeScreen.style.display !== 'none') return;
 
     e.preventDefault();
-    const delta = e.deltaY; // >0 — від себе, <0 — до себе
+    const delta = e.deltaY;
     let newScale = currentScale - delta * 0.0015;
     newScale = Math.max(0.5, Math.min(2.0, newScale));
     currentScale = newScale;
 
     if (scaleSlider && scaleValue) {
       scaleSlider.value = newScale.toFixed(1);
-      scaleValue.textContent = `${newScale.toFixed(1)}×`;
+      scaleValue.textContent = newScale.toFixed(1) + '×';
     }
     applyScale(newScale);
   }, { passive: false });
@@ -459,15 +463,15 @@ window.addEventListener('load', () => {
     camXSlider.addEventListener('input', updateCamFromSliders);
     camYSlider.addEventListener('input', updateCamFromSliders);
     camZSlider.addEventListener('input', updateCamFromSliders);
-    updateCamFromSliders(); // початкові значення
+    updateCamFromSliders();
   }
 
-  // Показуємо рекурсію factorial з візуалізацією стеку кожні 4 секунди
+  // Показуємо рекурсію factorial кожні 4 секунди
   setInterval(() => {
     stackVisualizer.clear();
     const n = 5;
     const result = factorial(n, stackVisualizer);
-    console.log(`factorial(${n}) = ${result}`);
+    console.log('factorial(' + n + ') = ' + result);
   }, 4000);
 
   // Запуск вебкамери + ML
