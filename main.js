@@ -7,6 +7,8 @@ let stackVisualizer = null;    // візуалізація стеку
 
 let treeRoot = null;
 let carpetRoot = null;
+let cameraRig = null;
+let currentScale = 1.0;
 
 // --------------------------------------------------
 // 1. ВІЗУАЛІЗАЦІЯ СТЕКУ ВИКЛИКІВ
@@ -74,7 +76,7 @@ function factorial(n, stackVis) {
 }
 
 // --------------------------------------------------
-// 3. ДЕРЕВО ПІФАГОРА (чіткіший фрактал)
+// 3. ДЕРЕВО ПІФАГОРА (чіткий фрактал)
 // --------------------------------------------------
 function createPythagorasTree(rootEl, maxDepth) {
   if (!rootEl) return;
@@ -89,8 +91,8 @@ function createPythagorasTree(rootEl, maxDepth) {
     const square = document.createElement('a-box');
     square.setAttribute('width', size);
     square.setAttribute('height', size);
-    square.setAttribute('depth', 0.12); // трохи товще
-    const hue = 205 + level * 8;        // синьо-блакитна гамма
+    square.setAttribute('depth', 0.12);
+    const hue = 205 + level * 8;
     square.setAttribute('color', `hsl(${hue}, 75%, 55%)`);
     square.setAttribute('position', { x, y, z: 0 });
     square.setAttribute('rotation', { x: 0, y: 0, z: angleDeg });
@@ -101,14 +103,12 @@ function createPythagorasTree(rootEl, maxDepth) {
     const newSize = size * Math.sqrt(2) / 2;
     const offset = size / 2 + newSize / 2;
 
-    // Ліва гілка (+45°)
     const leftAngle = angleDeg + 45;
     const leftRad = leftAngle * Math.PI / 180;
     const lx = x - offset * Math.cos(leftRad);
     const ly = y + offset * Math.sin(leftRad);
     addSquare(parent, lx, ly, newSize, leftAngle, level + 1);
 
-    // Права гілка (-45°)
     const rightAngle = angleDeg - 45;
     const rightRad = rightAngle * Math.PI / 180;
     const rx = x + offset * Math.cos(rightRad);
@@ -116,17 +116,16 @@ function createPythagorasTree(rootEl, maxDepth) {
     addSquare(parent, rx, ry, newSize, rightAngle, level + 1);
   }
 
-  // Трохи більше стартове дерево для “чіткості”
   addSquare(rootEl, 0, 0.6, 1.3, 0, 0);
 }
 
 // --------------------------------------------------
-// 4. КОВЕР СЕРПІНСЬКОГО (чіткіший)
+// 4. КОВЕР СЕРПІНСЬКОГО (чіткий)
 // --------------------------------------------------
 function createSierpinskiCarpet(rootEl, maxDepth) {
   if (!rootEl) return;
 
-  const depth = Math.min(maxDepth, 5); // не вище 5 — інакше дуже багато блоків
+  const depth = Math.min(maxDepth, 5); // не вище 5 рівня
 
   while (rootEl.firstChild) {
     rootEl.removeChild(rootEl.firstChild);
@@ -138,7 +137,7 @@ function createSierpinskiCarpet(rootEl, maxDepth) {
       box.setAttribute('width', size);
       box.setAttribute('height', 0.12);
       box.setAttribute('depth', size);
-      const hue = 40 + level * 10; // теплі відтінки
+      const hue = 40 + level * 10;
       box.setAttribute('color', `hsl(${hue}, 80%, 55%)`);
       box.setAttribute('position', { x: cx, y: 0.06, z: cz });
       parent.appendChild(box);
@@ -149,7 +148,7 @@ function createSierpinskiCarpet(rootEl, maxDepth) {
 
     for (let ix = -1; ix <= 1; ix++) {
       for (let iz = -1; iz <= 1; iz++) {
-        if (ix === 0 && iz === 0) continue; // центральна дірка
+        if (ix === 0 && iz === 0) continue;
 
         const nx = cx + ix * newSize;
         const nz = cz + iz * newSize;
@@ -158,12 +157,21 @@ function createSierpinskiCarpet(rootEl, maxDepth) {
     }
   }
 
-  // Трохи більший ковер
   addSquareCarpet(rootEl, 0, 0, 4, 0, depth);
 }
 
 // --------------------------------------------------
-// 5. ПЕРЕМАЛЮВАННЯ ФІГУР ЗА ПОТОЧНИМ РЕЖИМОМ/ГЛИБИНОЮ
+// 5. МАСШТАБ ФІГУР
+// --------------------------------------------------
+function applyScale(scale) {
+  currentScale = scale;
+  const s = { x: scale, y: scale, z: scale };
+  if (treeRoot) treeRoot.setAttribute('scale', s);
+  if (carpetRoot) carpetRoot.setAttribute('scale', s);
+}
+
+// --------------------------------------------------
+// 6. ПЕРЕМАЛЮВАННЯ ФІГУР ЗА ПОТОЧНИМ РЕЖИМОМ/ГЛИБИНОЮ
 // --------------------------------------------------
 function redrawFractals() {
   if (currentMode === 'none') return;
@@ -179,10 +187,13 @@ function redrawFractals() {
   } else if (carpetRoot) {
     while (carpetRoot.firstChild) carpetRoot.removeChild(carpetRoot.firstChild);
   }
+
+  // повторно застосувати масштаб після перемальовування
+  applyScale(currentScale);
 }
 
 // --------------------------------------------------
-// 6. ОНОВЛЕННЯ ГЛИБИНИ РЕКУРСІЇ
+// 7. ОНОВЛЕННЯ ГЛИБИНИ РЕКУРСІЇ
 // --------------------------------------------------
 function updateDepth(newDepth) {
   const clamped = Math.max(2, Math.min(9, Math.round(newDepth)));
@@ -199,7 +210,7 @@ function updateDepth(newDepth) {
 }
 
 // --------------------------------------------------
-// 7. РЕЖИМИ (які фігури показувати)
+// 8. РЕЖИМИ (які фігури показувати)
 // --------------------------------------------------
 function applyMode(mode) {
   currentMode = mode;
@@ -207,27 +218,23 @@ function applyMode(mode) {
   const sceneModeLabel = document.getElementById('scene-mode-label');
   if (sceneModeLabel) {
     let label = '—';
-    if (mode === 'both') label = 'Дерево + Ковер';
-    if (mode === 'tree') label = 'Тільки дерево Піфагора';
-    if (mode === 'carpet') label = 'Тільки ковер Серпінського';
+    if (mode === 'both') label = 'Дерево Піфагора + Ковер Серпінського';
+    if (mode === 'tree') label = 'Дерево Піфагора';
+    if (mode === 'carpet') label = 'Ковер Серпінського';
     sceneModeLabel.textContent = label;
   }
 
   const showTree = (mode === 'both' || mode === 'tree');
   const showCarpet = (mode === 'both' || mode === 'carpet');
 
-  if (treeRoot) {
-    treeRoot.setAttribute('visible', showTree);
-  }
-  if (carpetRoot) {
-    carpetRoot.setAttribute('visible', showCarpet);
-  }
+  if (treeRoot) treeRoot.setAttribute('visible', showTree);
+  if (carpetRoot) carpetRoot.setAttribute('visible', showCarpet);
 
   redrawFractals();
 }
 
 // --------------------------------------------------
-// 8. ML: ВЕБКАМЕРА + ДЕТЕКТОР РУКИ
+// 9. ML: ВЕБКАМЕРА + ДЕТЕКТОР РУКИ
 // --------------------------------------------------
 async function initWebcamAndML() {
   video = document.getElementById('webcam');
@@ -266,7 +273,7 @@ async function initHandDetector() {
 }
 
 // --------------------------------------------------
-// 9. ЦИКЛ ДЕТЕКЦІЇ РУКИ (жест "щипок" для глибини)
+// 10. ЦИКЛ ДЕТЕКЦІЇ РУКИ (жест "щипок" для глибини)
 // --------------------------------------------------
 async function detectHandsLoop() {
   if (!detector || !video || video.readyState < 2) {
@@ -289,13 +296,17 @@ async function detectHandsLoop() {
         const dy = thumbTip.y - indexTip.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
 
-        // Мапимо відстань (20..260) → глибина (2..9)
+        // Діапазон відстані
         const minD = 20;
         const maxD = 260;
         let t = (dist - minD) / (maxD - minD);
         t = Math.max(0, Math.min(1, t)); // 0..1
 
-        const depth = 2 + t * 7;
+        // Якщо показуємо тільки ковер – глибина 2..5, щоб усі значення були помітні
+        const depthMin = 2;
+        const depthMax = (currentMode === 'carpet') ? 5 : 9;
+        const depth = depthMin + t * (depthMax - depthMin);
+
         updateDepth(depth);
       }
     }
@@ -308,35 +319,52 @@ async function detectHandsLoop() {
 }
 
 // --------------------------------------------------
-// 10. СТАРТ ПРИ ЗАВАНТАЖЕННІ СТОРІНКИ
+// 11. ОНОВЛЕННЯ ПОЗИЦІЇ КАМЕРИ
+// --------------------------------------------------
+function updateCameraPosition(x, y, z) {
+  if (!cameraRig) return;
+  cameraRig.setAttribute('position', { x, y, z });
+}
+
+// --------------------------------------------------
+// 12. СТАРТ ПРИ ЗАВАНТАЖЕННІ СТОРІНКИ
 // --------------------------------------------------
 window.addEventListener('load', () => {
   treeRoot   = document.querySelector('#pythagoras-root');
   carpetRoot = document.querySelector('#sierpinski-root');
+  cameraRig  = document.querySelector('#cameraRig');
   const stackRoot = document.querySelector('#call-stack');
 
   stackVisualizer = new CallStackVisualizer(stackRoot);
 
-  // Головний екран + UI сцени
   const homeScreen   = document.getElementById('home-screen');
   const sceneUi      = document.getElementById('scene-ui');
   const backBtn      = document.getElementById('back-to-menu');
   const hudText      = document.querySelector('#hud-text');
 
+  // Слайдери й текстові значення
+  const scaleSlider  = document.getElementById('scale-slider');
+  const scaleValue   = document.getElementById('scale-value');
+  const camXSlider   = document.getElementById('camx-slider');
+  const camYSlider   = document.getElementById('camy-slider');
+  const camZSlider   = document.getElementById('camz-slider');
+  const camXValue    = document.getElementById('camx-value');
+  const camYValue    = document.getElementById('camy-value');
+  const camZValue    = document.getElementById('camz-value');
+
   if (hudText) {
     hudText.setAttribute('text', 'value: depth: -; color: #333; width: 4');
   }
 
-  // Кнопки на головному екрані
+  // Обробка кнопок на головному екрані
   const buttons = document.querySelectorAll('#home-screen .mode-btn');
   buttons.forEach(btn => {
     btn.addEventListener('click', () => {
       const mode = btn.dataset.mode;
-      // перейти до сцени
+
       if (homeScreen) homeScreen.style.display = 'none';
       if (sceneUi) sceneUi.classList.remove('hidden');
 
-      // оновити HUD з поточною глибиною
       if (hudText) {
         hudText.setAttribute('text', `value: depth: ${currentDepth}; color: #333; width: 4`);
       }
@@ -348,7 +376,6 @@ window.addEventListener('load', () => {
   // Кнопка "Назад до меню"
   if (backBtn) {
     backBtn.addEventListener('click', () => {
-      // зупиняємо показ фігур
       applyMode('none');
       if (treeRoot) {
         treeRoot.setAttribute('visible', false);
@@ -359,15 +386,40 @@ window.addEventListener('load', () => {
         while (carpetRoot.firstChild) carpetRoot.removeChild(carpetRoot.firstChild);
       }
 
-      // HUD повертаємо в "–"
       if (hudText) {
         hudText.setAttribute('text', 'value: depth: -; color: #333; width: 4');
       }
 
-      // показуємо знову головний екран
       if (homeScreen) homeScreen.style.display = 'flex';
       if (sceneUi) sceneUi.classList.add('hidden');
     });
+  }
+
+  // Слайдер масштабу
+  if (scaleSlider && scaleValue) {
+    scaleSlider.addEventListener('input', () => {
+      const val = parseFloat(scaleSlider.value);
+      scaleValue.textContent = `${val.toFixed(1)}×`;
+      applyScale(val);
+    });
+  }
+
+  // Слайдери камери
+  function updateCamFromSliders() {
+    const x = parseFloat(camXSlider.value);
+    const y = parseFloat(camYSlider.value);
+    const z = parseFloat(camZSlider.value);
+    camXValue.textContent = x.toString();
+    camYValue.textContent = y.toString();
+    camZValue.textContent = z.toString();
+    updateCameraPosition(x, y, z);
+  }
+
+  if (camXSlider && camYSlider && camZSlider) {
+    camXSlider.addEventListener('input', updateCamFromSliders);
+    camYSlider.addEventListener('input', updateCamFromSliders);
+    camZSlider.addEventListener('input', updateCamFromSliders);
+    updateCamFromSliders(); // початкові значення
   }
 
   // Показуємо рекурсію factorial з візуалізацією стеку кожні 4 секунди
